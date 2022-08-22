@@ -9,20 +9,36 @@ const vgmUrl = "https://justjoin.it/api/offers";
 
 got(vgmUrl)
 	.then((result) => {
-		// console.log(result.body);
-		// console.log(Object.keys(result.body));
-		// let keys = Object.entries(result.body);
 		const parsed = JSON.parse(result.body);
-		const keyedRes = Object.entries(parsed);
-		console.log(keyedRes);
+		handleResult(parsed);
 	})
 	.catch((err) => {
 		console.log(err);
 	});
 
-// const dom = new JSDOM(``, {
-// 	url: vgmUrl,
-// 	contentType: "text/html",
-// 	includeNodeLocations: true,
-// 	storageQuota: 10000000,
-// });
+function handleResult(result) {
+	const parsed = result;
+	const titles = getTitles(parsed);
+	console.log(titles);
+}
+
+function getTitles(res) {
+	const mappedTitles = _.map(res, (e, i) => e.title);
+	const occurences = _.reduce(
+		mappedTitles,
+		function (acc, curr) {
+			return acc[curr] ? ++acc[curr] : (acc[curr] = 1), acc;
+		},
+		{}
+	);
+	const arrOfArr = Object.entries(occurences);
+	return transformToObjArr(arrOfArr);
+}
+
+function transformToObjArr(data) {
+	const arr = [];
+	data.forEach(function (el) {
+		arr.push({ name: el[0], count: el[1] });
+	});
+	return arr;
+}
