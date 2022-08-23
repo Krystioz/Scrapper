@@ -1,15 +1,13 @@
-// import fs from "fs";
-// import cheerio from "cheerio";
 import got from "got";
-import jsdom from "jsdom";
-const { JSDOM } = jsdom;
 import _ from "lodash";
+import fs from "fs";
 
 const vgmUrl = "https://justjoin.it/api/offers";
 
 got(vgmUrl)
 	.then((result) => {
 		const parsed = JSON.parse(result.body);
+		// writeOffersFile(parsed);
 		handleResult(parsed);
 	})
 	.catch((err) => {
@@ -19,7 +17,7 @@ got(vgmUrl)
 function handleResult(result) {
 	const parsed = result;
 	const titles = getTitles(parsed);
-	console.log(titles);
+	console.log(titles)
 }
 
 function getTitles(res) {
@@ -41,4 +39,12 @@ function transformToObjArr(data) {
 		arr.push({ name: el[0], count: el[1] });
 	});
 	return arr;
+}
+
+function writeOffersFile(res) {
+	fs.writeFile(
+		`offer_files/justJoinData${Date.now()}`,
+		`${JSON.stringify(res)}`,
+		(err) => console.log(err)
+	);
 }
