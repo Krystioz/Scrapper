@@ -1,6 +1,7 @@
 import got from "got";
 import _ from "lodash";
 import fs from "fs";
+import { compareTwoStrings } from "string-similarity";
 
 const vgmUrl = "https://justjoin.it/api/offers";
 
@@ -8,7 +9,8 @@ got(vgmUrl)
 	.then((result) => {
 		const parsed = JSON.parse(result.body);
 		// writeOffersFile(parsed);
-		handleResult(parsed);
+		let jobTitles = handleResult(parsed);
+		compareJobTitles(jobTitles);
 	})
 	.catch((err) => {
 		console.log(err);
@@ -17,7 +19,7 @@ got(vgmUrl)
 function handleResult(result) {
 	const parsed = result;
 	const titles = getTitles(parsed);
-	console.log(titles)
+	return titles;
 }
 
 function getTitles(res) {
@@ -47,4 +49,19 @@ function writeOffersFile(res) {
 		`${JSON.stringify(res)}`,
 		(err) => console.log(err)
 	);
+}
+
+function compareJobTitles(titles) {
+	for (let title in titles) {
+		let name = titles[title].name;
+		titles.forEach(function (e, i) {
+			let similarity = compareTwoStrings(name, e.name);
+			if (similarity > 0.8) {
+				console.log(name, e.name, similarity);
+			}
+			// console.log(similarity);
+			// console.log(name + "||||||" + e.name)
+		});
+	}
+	// titles.forEach(e => console.log(e.name))
 }
