@@ -8,9 +8,12 @@ const vgmUrl = "https://justjoin.it/api/offers";
 got(vgmUrl)
 	.then((result) => {
 		const parsed = JSON.parse(result.body);
-		// writeOffersFile(parsed);
 		let jobTitles = handleResult(parsed);
-		compareJobTitles(jobTitles);
+		let titles = compareJobTitles(jobTitles);
+		let sortedTitles = titles.sort((a, b) => b.length - a.length);
+		writeTitles(sortedTitles);
+		// console.log(rawdata.split(","))
+		// writeOffersFile(parsed);
 	})
 	.catch((err) => {
 		console.log(err);
@@ -45,23 +48,56 @@ function transformToObjArr(data) {
 
 function writeOffersFile(res) {
 	fs.writeFile(
-		`offer_files/justJoinData${Date.now()}`,
+		`offer_files/justJoinData${Date.now()}.json`,
+		`${JSON.stringify(res)}`,
+		(err) => console.log(err)
+	);
+}
+
+function writeTitles(res) {
+	fs.writeFile(
+		`titles_files/titles_sorted${floorRandom(1000)}.json`,
 		`${JSON.stringify(res)}`,
 		(err) => console.log(err)
 	);
 }
 
 function compareJobTitles(titles) {
-	for (let title in titles) {
-		let name = titles[title].name;
+	let titleObjects = [];
+
+	titles.forEach(function (el, indx) {
+		let isMatch = false;
+		let nameObj = [];
+		let name = el.name;
+		nameObj.push(name);
+
 		titles.forEach(function (e, i) {
-			let similarity = compareTwoStrings(name, e.name);
-			if (similarity > 0.8) {
-				console.log(name, e.name, similarity);
+			let similarity = compareTwoStrings(
+				name.toLowerCase(),
+				e.name.toLowerCase()
+			);
+			if (similarity > 0.95) {
+				if (indx != i) {
+					isMatch = true;
+					// console.log(name, e.name, similarity);
+					nameObj.push(e.name);
+				}
 			}
-			// console.log(similarity);
-			// console.log(name + "||||||" + e.name)
 		});
+		// if (isMatch) {
+		// 	titleObjects.push(nameObj);
+		// } else {
+		// 	nameObj.push(name);
+			titleObjects.push(nameObj);
+		// }
+	});
+	return titleObjects;
+}
+
+function floorRandom(between) {
+	if (between < 10000 || typeof between != "number") {
+		return Math.floor(Math.random() * 10000);
+	} else {
+		return Math.floor(Math.random() * between);
 	}
-	// titles.forEach(e => console.log(e.name))
 }
