@@ -4,23 +4,28 @@ import fs from "fs";
 import { compareTwoStrings } from "string-similarity";
 
 const vgmUrl = "https://justjoin.it/api/offers";
+// RUNNING THE CODE HERE
+logTitles();
 
-got(vgmUrl)
-	.then((result) => {
-		const parsed = JSON.parse(result.body);
-		let jobTitles = getTitlesArr(parsed);
-		let sortedTitles = jobTitles.sort((a, b) => b.count - a.count);
-		let grouppedTitles = getCompared(sortedTitles);
-		let sortedGrouppedTitles = grouppedTitles.sort((a, b) => b.score - a.score);
-		//deleting similar arr to make console.log() clearer to read
-		_.each(sortedGrouppedTitles, (e) => delete e.similar);
-		console.log(sortedGrouppedTitles);
-	})
-	.catch((err) => {
-		console.log(err);
-	});
+// END OF SECTION TO RUN THE CODE
 
-function getTitlesArr(res) {
+async function logTitles() {
+	let res = await got(vgmUrl)
+		.then((res) => JSON.parse(res.body))
+		.then((res) => getTitlesObjArr(res))
+		.then((res) => res.sort((a, b) => b.count - a.count))
+		.then((res) => getSimilarAndScore(res))
+		.then((res) => res.sort((a, b) => b.score - a.score))
+		.then((res) => _.each(res, (e) => delete e.similar))
+		// .then((res) => console.log(res))
+		.catch((err) => {
+			console.log(err);
+		});
+}
+
+
+
+function getTitlesObjArr(res) {
 	const mappedTitles = _.map(res, (e, i) => e.title);
 	const occurences = _.countBy(mappedTitles, (e) =>
 		e
@@ -32,6 +37,7 @@ function getTitlesArr(res) {
 			.replace("-", "")
 	);
 	const arrOfArr = Object.entries(occurences);
+	console.log(arrOfArr)
 	return transformTitlesToObjArr(arrOfArr);
 }
 
@@ -60,7 +66,7 @@ function getCurrDate() {
 	return dformat;
 }
 
-function getCompared(parsedData) {
+function getSimilarAndScore(parsedData) {
 	let similarObj = [];
 
 	for (let e = 0; e < 20; e++) {
@@ -91,7 +97,7 @@ function getCompared(parsedData) {
 
 function writeTitles(res) {
 	fs.writeFile(
-		`titles_groupped/titles_groupped${getCurrDate()}.json`,
+		`titles_groupped/titles_groupped&${getCurrDate()}.json`,
 		`${JSON.stringify(res)}`,
 		(err) => console.log(err)
 	);
@@ -99,7 +105,7 @@ function writeTitles(res) {
 
 function writeOffersFile(res) {
 	fs.writeFile(
-		`offer_files/justJoinData${getCurrDate()}.json`,
+		`offer_files/justJoinData&${getCurrDate()}.json`,
 		`${JSON.stringify(res)}`,
 		(err) => console.log(err)
 	);
