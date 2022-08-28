@@ -1,0 +1,7 @@
+.env
+*.env
+titles_groupped
+title_files
+offer_files
+job_req
+json_files
