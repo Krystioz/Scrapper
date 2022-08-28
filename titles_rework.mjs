@@ -1,7 +1,10 @@
 import got from "got";
 import _ from "lodash";
-import fs from "fs";
-import { compareTwoStrings } from "string-similarity";
+import {
+	writeJsonFile,
+	transformReqToObjArr,
+	getCurrDate,
+} from "./helpers.mjs";
 
 const vgmUrl = "https://justjoin.it/api/offers";
 // RUNNING THE CODE HERE
@@ -17,13 +20,13 @@ async function logTitles() {
 		.then((res) => getSimilarAndScore(res))
 		.then((res) => res.sort((a, b) => b.score - a.score))
 		.then((res) => _.each(res, (e) => delete e.similar))
-		// .then((res) => console.log(res))
+		.then((res) =>
+			writeJsonFile("offer_files", "justJoinOffers", getCurrDate(), res)
+		)
 		.catch((err) => {
 			console.log(err);
 		});
 }
-
-
 
 function getTitlesObjArr(res) {
 	const mappedTitles = _.map(res, (e, i) => e.title);
@@ -37,33 +40,8 @@ function getTitlesObjArr(res) {
 			.replace("-", "")
 	);
 	const arrOfArr = Object.entries(occurences);
-	console.log(arrOfArr)
+	console.log(arrOfArr);
 	return transformTitlesToObjArr(arrOfArr);
-}
-
-function transformTitlesToObjArr(data) {
-	const arr = [];
-	data.forEach(function (el) {
-		arr.push({ name: el[0], count: el[1] });
-	});
-	return arr;
-}
-
-function floorRandom(between) {
-	if (between < 10000 || typeof between != "number") {
-		return Math.floor(Math.random() * 10000);
-	} else {
-		return Math.floor(Math.random() * between);
-	}
-}
-
-function getCurrDate() {
-	var d = new Date(),
-		dformat =
-			[d.getMonth() + 1, d.getDate(), d.getFullYear()].join(":") +
-			"-" +
-			[d.getHours(), d.getMinutes(), d.getSeconds()].join(":");
-	return dformat;
 }
 
 function getSimilarAndScore(parsedData) {
@@ -93,20 +71,4 @@ function getSimilarAndScore(parsedData) {
 		similarObj.push(titleObj);
 	}
 	return similarObj;
-}
-
-function writeTitles(res) {
-	fs.writeFile(
-		`titles_groupped/titles_groupped&${getCurrDate()}.json`,
-		`${JSON.stringify(res)}`,
-		(err) => console.log(err)
-	);
-}
-
-function writeOffersFile(res) {
-	fs.writeFile(
-		`offer_files/justJoinData&${getCurrDate()}.json`,
-		`${JSON.stringify(res)}`,
-		(err) => console.log(err)
-	);
 }
